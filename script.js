@@ -4,7 +4,10 @@ const piecesContainer = document.getElementById('lego-pieces');
 const music = document.getElementById('bg-music');
 let completed = 0;
 
-// Puzzle Kurulumu
+// Müzik kontrolü
+const startMusic = () => { music.play().catch(() => {}); };
+
+// Puzzle Oluşturma
 words.forEach((word, i) => {
     const zone = document.createElement('div');
     zone.className = 'drop-zone';
@@ -15,97 +18,96 @@ words.forEach((word, i) => {
     piece.className = 'lego-piece';
     piece.innerText = word;
     piece.dataset.index = i;
-    
-    // Mobil Dokunmatik Kontrolleri
-    piece.addEventListener('touchstart', handleStart);
-    piece.addEventListener('touchmove', handleMove);
-    piece.addEventListener('touchend', handleEnd);
-    
-    // Masaüstü Drag Kontrolleri
-    piece.draggable = true;
-    piece.id = `p-${i}`;
-    piece.ondragstart = (e) => { startMusic(); e.dataTransfer.setData("text", e.target.id); };
-    
+    piece.id = "piece-" + i;
+
+    // Olay Dinleyicileri (Mobil ve Masaüstü birleşik)
+    piece.addEventListener('mousedown', startDrag);
+    piece.addEventListener('touchstart', startDrag, {passive: false});
+
     piecesContainer.appendChild(piece);
 });
 
-// Masaüstü Drop
-board.addEventListener('dragover', e => e.preventDefault());
-board.addEventListener('drop', e => {
-    const id = e.dataTransfer.getData("text");
-    const p = document.getElementById(id);
-    if(e.target.dataset.index === p.dataset.index) {
-        e.target.appendChild(p);
-        checkWin();
-    }
-});
+let dragItem = null;
 
-function startMusic() {
-    music.play().catch(() => {});
-}
-
-// Mobil Sürükleme Mantığı
-let activePiece = null;
-function handleStart(e) {
+function startDrag(e) {
     startMusic();
-    activePiece = e.target;
-    activePiece.style.zIndex = 1000;
+    dragItem = e.target;
+    dragItem.style.position = 'fixed';
+    moveAt(e);
+
+    document.addEventListener('mousemove', onDragging);
+    document.addEventListener('touchmove', onDragging, {passive: false});
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchend', stopDrag);
 }
 
-function handleMove(e) {
-    if (!activePiece) return;
-    const touch = e.touches[0];
-    activePiece.style.position = 'fixed';
-    activePiece.style.left = (touch.clientX - 35) + 'px';
-    activePiece.style.top = (touch.clientY - 25) + 'px';
+function onDragging(e) {
+    if (!dragItem) return;
+    e.preventDefault();
+    moveAt(e);
 }
 
-function handleEnd(e) {
-    if (!activePiece) return;
-    const touch = e.changedTouches[0];
-    activePiece.style.display = 'none';
-    const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
-    activePiece.style.display = 'flex';
+function moveAt(e) {
+    const pageX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const pageY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    dragItem.style.left = pageX - dragItem.offsetWidth / 2 + 'px';
+    dragItem.style.top = pageY - dragItem.offsetHeight / 2 + 'px';
+}
 
-    if (elementAtPoint && elementAtPoint.classList.contains('drop-zone') && 
-        elementAtPoint.dataset.index === activePiece.dataset.index) {
-        elementAtPoint.appendChild(activePiece);
-        activePiece.style.position = 'static';
-        activePiece.ontouchstart = null;
-        checkWin();
+function stopDrag(e) {
+    if (!dragItem) return;
+    
+    const pageX = e.type.includes('touch') ? e.changedTouches[0].clientX : e.clientX;
+    const pageY = e.type.includes('touch') ? e.changedTouches[0].clientY : e.clientY;
+    
+    dragItem.style.display = 'none';
+    const dropTarget = document.elementFromPoint(pageX, pageY);
+    dragItem.style.display = 'flex';
+
+    if (dropTarget && dropTarget.classList.contains('drop-zone') && 
+        dropTarget.dataset.index === dragItem.dataset.index) {
+        dropTarget.appendChild(dragItem);
+        dragItem.style.position = 'static';
+        dragItem.removeEventListener('mousedown', startDrag);
+        dragItem.removeEventListener('touchstart', startDrag);
+        completed++;
+        if (completed === words.length) win();
     } else {
-        activePiece.style.position = 'static';
+        dragItem.style.position = 'static';
     }
-    activePiece = null;
+    
+    dragItem = null;
+    document.removeEventListener('mousemove', onDragging);
+    document.removeEventListener('touchmove', onDragging);
 }
 
-function checkWin() {
-    completed++;
-    if (completed === words.length) {
-        document.getElementById('success-message').classList.remove('hidden');
-        setTimeout(() => {
-            document.getElementById('puzzle-section').classList.add('hidden');
-            document.getElementById('animation-area').classList.remove('hidden');
-        }, 2000);
-    }
+function win() {
+    document.getElementById('success-message').classList.remove('hidden');
+    setTimeout(() => {
+        document.getElementById('puzzle-section').classList.add('hidden');
+        document.getElementById('animation-area').classList.remove('hidden');
+    }, 2000);
 }
 
-// ARABA SÜRÜKLEME (MOBİL & MASAÜSTÜ)
+// ARABA KONTROLÜ
 const car = document.getElementById('car');
 const flap = document.getElementById('flap');
 const letter = document.getElementById('letter');
 
-const moveCar = (clientX) => {
+const carMove = (e) => {
+    e.preventDefault();
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
     const trackRect = document.getElementById('track').getBoundingClientRect();
-    let x = clientX - trackRect.left - 25;
-    if (x > 0 && x < trackRect.width - 50) {
+    let x = clientX - trackRect.left - 30;
+
+    if (x > 0 && x < trackRect.width - 60) {
         car.style.left = x + 'px';
-        if (x > trackRect.width * 0.4) {
+        if (x > trackRect.width * 0.5) {
             flap.classList.add('torn-flap');
-            setTimeout(() => letter.classList.add('reveal-letter'), 300);
+            setTimeout(() => letter.classList.add('reveal-letter'), 400);
         }
     }
 };
 
-car.addEventListener('touchmove', (e) => moveCar(e.touches[0].clientX));
-car.addEventListener('drag', (e) => { if(e.clientX > 0) moveCar(e.clientX); });
+car.addEventListener('touchmove', carMove, {passive: false});
+car.addEventListener('mousemove', (e) => { if(e.buttons === 1) carMove(e); });
