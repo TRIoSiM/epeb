@@ -4,110 +4,120 @@ const piecesContainer = document.getElementById('lego-pieces');
 const music = document.getElementById('bg-music');
 let completed = 0;
 
-// Müzik kontrolü
+// Müzik Başlatıcı
 const startMusic = () => { music.play().catch(() => {}); };
 
-// Puzzle Oluşturma
+// Puzzle Kurulumu
 words.forEach((word, i) => {
     const zone = document.createElement('div');
     zone.className = 'drop-zone';
-    zone.dataset.index = i;
+    zone.id = `zone-${i}`;
     board.appendChild(zone);
 
     const piece = document.createElement('div');
     piece.className = 'lego-piece';
     piece.innerText = word;
+    piece.id = `piece-${i}`;
     piece.dataset.index = i;
-    piece.id = "piece-" + i;
 
-    // Olay Dinleyicileri (Mobil ve Masaüstü birleşik)
-    piece.addEventListener('mousedown', startDrag);
-    piece.addEventListener('touchstart', startDrag, {passive: false});
-
+    // Pointer Events (Fare ve Dokunmatik için tek çözüm)
+    piece.addEventListener('pointerdown', onPointerDown);
     piecesContainer.appendChild(piece);
 });
 
-let dragItem = null;
+let activeItem = null;
+let offset = { x: 0, y: 0 };
 
-function startDrag(e) {
+function onPointerDown(e) {
     startMusic();
-    dragItem = e.target;
-    dragItem.style.position = 'fixed';
-    moveAt(e);
-
-    document.addEventListener('mousemove', onDragging);
-    document.addEventListener('touchmove', onDragging, {passive: false});
-    document.addEventListener('mouseup', stopDrag);
-    document.addEventListener('touchend', stopDrag);
-}
-
-function onDragging(e) {
-    if (!dragItem) return;
-    e.preventDefault();
-    moveAt(e);
-}
-
-function moveAt(e) {
-    const pageX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-    const pageY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-    dragItem.style.left = pageX - dragItem.offsetWidth / 2 + 'px';
-    dragItem.style.top = pageY - dragItem.offsetHeight / 2 + 'px';
-}
-
-function stopDrag(e) {
-    if (!dragItem) return;
+    activeItem = e.target;
+    activeItem.setPointerCapture(e.pointerId);
     
-    const pageX = e.type.includes('touch') ? e.changedTouches[0].clientX : e.clientX;
-    const pageY = e.type.includes('touch') ? e.changedTouches[0].clientY : e.clientY;
-    
-    dragItem.style.display = 'none';
-    const dropTarget = document.elementFromPoint(pageX, pageY);
-    dragItem.style.display = 'flex';
+    const rect = activeItem.getBoundingClientRect();
+    offset.x = e.clientX - rect.left;
+    offset.y = e.clientY - rect.top;
 
-    if (dropTarget && dropTarget.classList.contains('drop-zone') && 
-        dropTarget.dataset.index === dragItem.dataset.index) {
-        dropTarget.appendChild(dragItem);
-        dragItem.style.position = 'static';
-        dragItem.removeEventListener('mousedown', startDrag);
-        dragItem.removeEventListener('touchstart', startDrag);
+    activeItem.style.position = 'fixed';
+    activeItem.style.left = (e.clientX - offset.x) + 'px';
+    activeItem.style.top = (e.clientY - offset.y) + 'px';
+    activeItem.style.zIndex = "1000";
+
+    activeItem.addEventListener('pointermove', onPointerMove);
+    activeItem.addEventListener('pointerup', onPointerUp);
+}
+
+function onPointerMove(e) {
+    if (!activeItem) return;
+    activeItem.style.left = (e.clientX - offset.x) + 'px';
+    activeItem.style.top = (e.clientY - offset.y) + 'px';
+}
+
+function onPointerUp(e) {
+    if (!activeItem) return;
+    
+    const targetZone = document.getElementById(`zone-${activeItem.dataset.index}`);
+    const zoneRect = targetZone.getBoundingClientRect();
+    const pieceRect = activeItem.getBoundingClientRect();
+
+    // Çakışma kontrolü (Mesafe bazlı)
+    const isInside = (
+        pieceRect.left < zoneRect.right &&
+        pieceRect.right > zoneRect.left &&
+        pieceRect.top < zoneRect.bottom &&
+        pieceRect.bottom > zoneRect.top
+    );
+
+    if (isInside) {
+        targetZone.appendChild(activeItem);
+        activeItem.style.position = 'static';
+        activeItem.style.zIndex = "10";
+        activeItem.removeEventListener('pointerdown', onPointerDown);
         completed++;
         if (completed === words.length) win();
     } else {
-        dragItem.style.position = 'static';
+        // Yerine oturmadıysa geri gönder
+        activeItem.style.position = 'relative';
+        activeItem.style.left = '0';
+        activeItem.style.top = '0';
+        piecesContainer.appendChild(activeItem);
     }
-    
-    dragItem = null;
-    document.removeEventListener('mousemove', onDragging);
-    document.removeEventListener('touchmove', onDragging);
+
+    activeItem.releasePointerCapture(e.pointerId);
+    activeItem.removeEventListener('pointermove', onPointerMove);
+    activeItem.removeEventListener('pointerup', onPointerUp);
+    activeItem = null;
 }
 
 function win() {
-    document.getElementById('success-message').classList.remove('hidden');
     setTimeout(() => {
-        document.getElementById('puzzle-section').classList.add('hidden');
-        document.getElementById('animation-area').classList.remove('hidden');
-    }, 2000);
+        document.getElementById('success-message').classList.remove('hidden');
+        setTimeout(() => {
+            document.getElementById('puzzle-section').classList.add('hidden');
+            document.getElementById('animation-area').classList.remove('hidden');
+        }, 1500);
+    }, 300);
 }
 
-// ARABA KONTROLÜ
+// ARABA SÜRÜKLEME
 const car = document.getElementById('car');
 const flap = document.getElementById('flap');
 const letter = document.getElementById('letter');
 
-const carMove = (e) => {
-    e.preventDefault();
-    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-    const trackRect = document.getElementById('track').getBoundingClientRect();
-    let x = clientX - trackRect.left - 30;
-
-    if (x > 0 && x < trackRect.width - 60) {
-        car.style.left = x + 'px';
-        if (x > trackRect.width * 0.5) {
-            flap.classList.add('torn-flap');
-            setTimeout(() => letter.classList.add('reveal-letter'), 400);
+car.addEventListener('pointerdown', (e) => {
+    car.setPointerCapture(e.pointerId);
+    const onMove = (me) => {
+        const trackRect = document.getElementById('track').getBoundingClientRect();
+        let x = me.clientX - trackRect.left - 40;
+        if (x > 0 && x < trackRect.width - 80) {
+            car.style.left = x + 'px';
+            if (x > trackRect.width * 0.5) {
+                flap.classList.add('torn-flap');
+                setTimeout(() => letter.classList.add('reveal-letter'), 300);
+            }
         }
-    }
-};
-
-car.addEventListener('touchmove', carMove, {passive: false});
-car.addEventListener('mousemove', (e) => { if(e.buttons === 1) carMove(e); });
+    };
+    car.addEventListener('pointermove', onMove);
+    car.addEventListener('pointerup', () => {
+        car.removeEventListener('pointermove', onMove);
+    }, { once: true });
+});
