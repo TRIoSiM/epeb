@@ -1,0 +1,97 @@
+:root {
+    --primary: #ff0000;
+    --dark: #050505;
+    --glass: rgba(20, 20, 20, 0.9);
+}
+
+* { box-sizing: border-box; touch-action: none; } /* Mobilde kaydırmayı engellemek için */
+
+body {
+    background-color: var(--dark);
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    margin: 0; height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+    overflow: hidden;
+}
+
+.glow-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at center, #300000 0%, #000000 90%);
+    z-index: -1;
+}
+
+.container {
+    width: 95%; max-width: 900px; padding: 20px;
+    background: var(--glass); backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 0, 0, 0.3); border-radius: 20px;
+    text-align: center;
+}
+
+.glitch-text {
+    font-family: 'Orbitron', sans-serif; font-size: 1.5rem;
+    color: var(--primary); letter-spacing: 4px; text-shadow: 0 0 10px var(--primary);
+}
+
+#puzzle-board { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+
+.drop-zone {
+    width: 70px; height: 50px;
+    border: 2px dashed #444; border-radius: 8px; background: rgba(0,0,0,0.6);
+}
+
+#lego-pieces { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+
+.lego-piece {
+    width: 70px; height: 50px;
+    background: linear-gradient(135deg, #ff0000 0%, #800000 100%);
+    color: white; font-weight: bold; font-family: 'Orbitron';
+    font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; cursor: grab; position: relative;
+}
+
+/* Animasyon Alanı */
+#track {
+    position: relative; width: 100%; height: 350px;
+    background: #0a0a0a; border-radius: 15px;
+    border-bottom: 4px solid var(--primary); overflow: hidden; margin-top: 15px;
+}
+
+#car {
+    position: absolute; left: 10px; top: 30px;
+    font-size: 50px; z-index: 100; filter: drop-shadow(0 0 10px var(--primary));
+}
+
+.envelope {
+    position: absolute; bottom: 10px; left: 50%;
+    transform: translateX(-50%); width: 95%; height: 220px;
+    background: #1a1a1a; border: 1px solid #333;
+}
+
+.envelope-flap {
+    position: absolute; top: 0; left: 0; width: 100%; height: 40px;
+    background: var(--primary); z-index: 10; transition: all 0.6s ease;
+}
+
+.letter { 
+    padding: 15px; opacity: 0; transition: 0.8s; 
+    height: 100%; overflow-y: auto; text-align: left; 
+}
+
+.letter-content h3 { font-family: 'Orbitron'; color: var(--primary); font-size: 1rem; }
+.letter-content p { font-size: 0.85rem; line-height: 1.4; color: #ccc; }
+
+.footer-msg { font-weight: bold; color: var(--primary); margin-top: 10px; }
+
+/* Dinamik Durumlar */
+.hidden { display: none; }
+.torn-flap { transform: translateY(-100%) scaleY(0); opacity: 0; }
+.reveal-letter { opacity: 1 !important; }
+
+/* Masaüstü için büyük ekran ayarları */
+@media (min-width: 768px) {
+    .glitch-text { font-size: 2.5rem; }
+    .drop-zone, .lego-piece { width: 120px; height: 70px; font-size: 1rem; }
+    .envelope { width: 80% !important; height: 250px; top: 80px; bottom: auto; }
+    #car { font-size: 80px; top: 120px; }
+}
