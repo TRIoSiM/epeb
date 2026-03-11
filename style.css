@@ -4,84 +4,79 @@
     --glass: rgba(15, 15, 15, 0.95);
 }
 
-* { box-sizing: border-box; touch-action: none; -webkit-user-select: none; user-select: none; }
+* { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
 
 body {
     background-color: var(--dark);
-    margin: 0; height: 100vh;
+    height: 100vh; width: 100vw;
     display: flex; justify-content: center; align-items: center;
-    font-family: 'Poppins', sans-serif; color: white;
-    overflow: hidden;
+    font-family: 'Poppins', sans-serif; overflow: hidden;
 }
 
 .glow-bg {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: radial-gradient(circle at center, #400000 0%, #000000 90%);
+    background: radial-gradient(circle at center, #300000 0%, #000000 90%);
     z-index: -1;
 }
 
 .container {
-    width: 95%; max-width: 900px; padding: 25px;
-    background: var(--glass); border: 1px solid rgba(255, 0, 0, 0.3);
-    border-radius: 25px; text-align: center; backdrop-filter: blur(10px);
+    width: 90%; max-width: 600px; padding: 30px;
+    background: var(--glass); border: 1px solid rgba(255,0,0,0.3);
+    border-radius: 20px; text-align: center; position: relative;
 }
 
 .glitch-text {
-    font-family: 'Orbitron', sans-serif; color: var(--primary);
-    letter-spacing: 5px; text-shadow: 0 0 10px var(--primary); margin: 0 0 20px 0;
+    font-family: 'Orbitron'; color: var(--primary);
+    font-size: 1.8rem; text-shadow: 0 0 10px var(--primary);
+    margin-bottom: 25px;
 }
 
 #puzzle-board { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; }
 
 .drop-zone {
-    width: 75px; height: 55px;
-    border: 2px dashed #444; border-radius: 10px; background: rgba(0,0,0,0.5);
-    transition: background 0.3s;
+    width: 70px; height: 55px;
+    border: 2px dashed #444; border-radius: 8px; background: rgba(0,0,0,0.5);
 }
 
-#lego-pieces { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 20px; }
+#lego-pieces { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
 .lego-piece {
-    width: 75px; height: 55px;
+    width: 70px; height: 55px;
     background: linear-gradient(135deg, #ff0000, #800000);
-    color: white; font-weight: bold; border-radius: 10px;
+    color: white; border-radius: 8px; font-weight: bold;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Orbitron'; font-size: 0.7rem; cursor: grab;
-    box-shadow: 0 4px 0 #500; z-index: 100;
-    position: relative;
+    font-size: 0.7rem; font-family: 'Orbitron'; cursor: grab;
+    box-shadow: 0 4px 0 #500;
 }
 
 #track {
-    position: relative; width: 100%; height: 380px;
-    background: #080808; border-radius: 20px;
-    border-bottom: 5px solid var(--primary); overflow: hidden;
+    position: relative; width: 100%; height: 350px;
+    background: #080808; border-radius: 15px; border-bottom: 4px solid var(--primary);
 }
 
-#car {
-    position: absolute; left: 10px; top: 20px;
-    font-size: 60px; z-index: 100; cursor: grab;
-}
+#car { position: absolute; left: 10px; top: 20px; font-size: 60px; z-index: 100; cursor: grab; }
 
 .envelope {
     position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-    width: 90%; height: 250px; background: #151515; border: 1px solid #333;
+    width: 90%; height: 230px; background: #151515; border: 1px solid #333;
 }
 
 .envelope-flap {
-    position: absolute; top: 0; left: 0; width: 100%; height: 45px;
-    background: var(--primary); z-index: 5; transition: 0.6s ease;
+    position: absolute; top: 0; left: 0; width: 100%; height: 40px;
+    background: var(--primary); z-index: 5; transition: 0.6s;
 }
 
-.letter { padding: 20px; opacity: 0; transition: 1s; height: 100%; overflow-y: auto; text-align: left; }
-.letter-content h3 { color: var(--primary); font-family: 'Orbitron'; font-size: 1rem; }
-.letter-content p { font-size: 0.9rem; line-height: 1.5; color: #ddd; }
+.letter { padding: 15px; opacity: 0; transition: 1s; height: 100%; overflow-y: auto; text-align: left; }
+.letter-content h3 { color: var(--primary); font-family: 'Orbitron'; font-size: 1rem; margin-bottom: 10px; }
+.letter-content p { font-size: 0.85rem; line-height: 1.4; color: #ccc; }
+.signature { color: var(--primary); font-weight: bold; margin-top: 10px; }
 
 .hidden { display: none; }
 .torn-flap { transform: translateY(-100%); opacity: 0; }
 .reveal-letter { opacity: 1 !important; }
 
 @media (min-width: 768px) {
-    .drop-zone, .lego-piece { width: 110px; height: 65px; font-size: 0.9rem; }
-    .envelope { width: 70%; height: 260px; top: 90px; }
-    #car { font-size: 80px; top: 110px; }
+    .container { max-width: 800px; }
+    .drop-zone, .lego-piece { width: 120px; height: 75px; font-size: 1rem; }
+    #car { font-size: 80px; top: 100px; }
 }
